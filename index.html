@@ -27,18 +27,20 @@
     <h2>Giám sát Năng lượng ESP32 - MX300</h2>
     <p>Trạng thái kết nối MQTT: <span id="status">Đang kết nối...</span></p>
 
+    <!-- Thêm thẻ hiển thị Tổng kWh đã dùng -->
     <div class="grid">
         <div class="card"><h4>Điện áp</h4><span id="v">--</span> V</div>
         <div class="card"><h4>Dòng điện</h4><span id="i">--</span> A</div>
         <div class="card"><h4>Công suất tác dụng</h4><span id="p">--</span> kW</div>
         <div class="card"><h4>Hệ số công suất (PF)</h4><span id="pf">--</span></div>
         <div class="card"><h4>Tần số</h4><span id="f">--</span> Hz</div>
-        <div class="card"><h4>Tổng tiền điện</h4><span id="bill" style="color: red;">--</span> VNĐ</div>
+        <div class="card"><h4>Tổng điện năng</h4><span id="total_kwh" style="color: #d9534f;">--</span> kWh</div>
+        <div class="card" style="grid-column: span 3; background: #fff3cd;"><h4>Tổng tiền điện tháng</h4><span id="bill" style="color: red; font-size: 24px;">--</span> VNĐ</div>
     </div>
 
     <h3>Cài đặt Biểu giá điện Bậc thang & Số kWh</h3>
-    <label><b>Số kWh tiêu thụ trong tháng:</b> </label>
-    <input type="number" id="inputKWh" value="120" style="width: 120px; font-weight: bold;" step="0.1"><br><br>
+    <label><b>Số kWh tiêu thụ (hoặc hiệu chỉnh):</b> </label>
+    <input type="number" id="inputKWh" value="0" style="width: 120px; font-weight: bold;" step="0.01"><br><br>
 
     <table>
         <tr>
@@ -54,11 +56,10 @@
         <tr><td>Bậc 6</td><td>401 kWh trở lên</td><td><input type="number" id="p6" value="3460"></td></tr>
     </table>
 
-    <button class="btn" onclick="sendConfigToESP32()">Cập nhật Đơn giá & Tính tiền</button>
+    <button class="btn" onclick="sendConfigToESP32()">Cập nhật Đơn giá & Cài đặt kWh</button>
 </div>
 
 <script>
-    // Sử dụng cổng WSS 8884 của broker.hivemq.com để web kết nối bảo mật mượt mà
     const client = new Paho.MQTT.Client("broker.hivemq.com", 8884, "WebClient_" + parseInt(Math.random()*100000));
 
     client.onConnectionLost = function (responseObject) {
@@ -75,11 +76,12 @@
             document.getElementById("pf").innerText = data.pf ? data.pf.toFixed(2) : "--";
             document.getElementById("f").innerText = data.freq ? data.freq.toFixed(2) : "--";
             
+            if(data.kwh !== undefined) {
+                document.getElementById("total_kwh").innerText = data.kwh.toFixed(2);
+                document.getElementById("inputKWh").value = data.kwh.toFixed(2);
+            }
             if(data.total_bill !== undefined) {
                 document.getElementById("bill").innerText = data.total_bill.toLocaleString('vi-VN');
-            }
-            if(data.kwh !== undefined) {
-                document.getElementById("inputKWh").value = data.kwh;
             }
         } catch (e) { console.log("Lỗi parse JSON:", e); }
     };
@@ -107,7 +109,7 @@
         let message = new Paho.MQTT.Message(JSON.stringify(configData));
         message.destinationName = "esp32/myhome/control";
         client.send(message);
-        alert("Đã gửi cập nhật đơn giá xuống ESP32 thành công qua MQTT!");
+        alert("Đã gửi cấu hình xuống thiết bị thành công!");
     }
 </script>
 
