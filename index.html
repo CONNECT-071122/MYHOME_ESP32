@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Điều Khiển & Giám Sát ESP32</title>
-    <!-- Thư viện MQTT.js qua CDN -->
+    <title>Dieu Khien LED RGB ESP32</title>
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         body {
@@ -23,7 +22,7 @@
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             text-align: center;
-            width: 320px;
+            width: 340px;
         }
         h2 { margin-bottom: 20px; color: #00d2ff; }
         .status-box {
@@ -37,44 +36,47 @@
         }
         .btn {
             width: 100%;
-            padding: 14px;
-            margin: 8px 0;
-            font-size: 16px;
+            padding: 12px;
+            margin: 6px 0;
+            font-size: 15px;
             font-weight: bold;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             transition: 0.2s;
+            color: white;
         }
-        .btn-on { background-color: #40a02b; color: white; }
-        .btn-on:hover { background-color: #318220; }
-        .btn-off { background-color: #e64553; color: white; }
-        .btn-off:hover { background-color: #c5303c; }
+        .btn-red { background-color: #e64553; }
+        .btn-green { background-color: #40a02b; }
+        .btn-blue { background-color: #1e66f5; }
+        .btn-off { background-color: #6c7086; }
+        .btn:hover { opacity: 0.85; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>ESP32 Dashboard</h2>
+        <h2>ESP32 RGB Dashboard</h2>
         
         <div class="status-box">
-            <strong>Giám sát hệ thống:</strong>
-            <p id="monitoring-data">Đang kết nối server...</p>
+            <strong>Giam sat he thong:</strong>
+            <p id="monitoring-data">Dang ket noi server...</p>
         </div>
 
-        <button class="btn btn-on" onclick="sendControl('ON')">BẬT THIẾT BỊ</button>
-        <button class="btn btn-off" onclick="sendControl('OFF')">TẮT THIẾT BỊ</button>
+        <button class="btn btn-red" onclick="sendControl('RED')">BAT MAU DO</button>
+        <button class="btn btn-green" onclick="sendControl('GREEN')">BAT MAU XANH LA</button>
+        <button class="btn btn-blue" onclick="sendControl('BLUE')">BAT MAU XANH DUONG</button>
+        <button class="btn btn-off" onclick="sendControl('OFF')">TAT DEN</button>
     </div>
 
     <script>
-        // Kết nối tới MQTT Broker qua WebSocket bảo mật (8884)
         const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
         const topicControl = "esp32/myhome/control";
         const topicStatus  = "esp32/myhome/status";
 
         client.on('connect', () => {
-            document.getElementById('monitoring-data').innerText = "Đã kết nối MQTT Broker!";
+            document.getElementById('monitoring-data').innerText = "Da ket noi MQTT Broker!";
             client.subscribe(topicStatus);
         });
 
