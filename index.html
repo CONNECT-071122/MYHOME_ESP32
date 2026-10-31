@@ -1,0 +1,92 @@
+!DOCTYPE html
+html lang=vi
+head
+  meta charset=UTF-8
+  meta name=viewport content=width=device-width, initial-scale=1.0
+  titleBảng Điều Khiển & Giám Sát ESP32title
+  !-- Nhập thư viện MQTT.js qua CDN --
+  script src=httpsunpkg.commqttdistmqtt.min.jsscript
+  style
+    body {
+      font-family 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color #1e1e2e;
+      color #ffffff;
+      display flex;
+      justify-content center;
+      align-items center;
+      min-height 100vh;
+      margin 0;
+    }
+    .card {
+      background #2b2b3d;
+      padding 30px;
+      border-radius 16px;
+      box-shadow 0 10px 25px rgba(0,0,0,0.5);
+      text-align center;
+      width 320px;
+    }
+    h2 { margin-bottom 20px; color #00d2ff; }
+    .status-box {
+      background #181825;
+      padding 15px;
+      border-radius 8px;
+      margin-bottom 25px;
+      font-size 14px;
+      color #a6adc8;
+      word-break break-all;
+    }
+    .btn {
+      width 100%;
+      padding 14px;
+      margin 8px 0;
+      font-size 16px;
+      font-weight bold;
+      border none;
+      border-radius 8px;
+      cursor pointer;
+      transition 0.2s;
+    }
+    .btn-on { background-color #40a02b; color white; }
+    .btn-onhover { background-color #318220; }
+    .btn-off { background-color #e64553; color white; }
+    .btn-offhover { background-color #c5303c; }
+  style
+head
+body
+
+  div class=card
+    h2ESP32 Dashboardh2
+    
+    div class=status-box
+      strongGiám sát hệ thốngstrong
+      p id=monitoring-dataĐang kết nối server...p
+    div
+
+    button class=btn btn-on onclick=sendControl('ON')BẬT THIẾT BỊbutton
+    button class=btn btn-off onclick=sendControl('OFF')TẮT THIẾT BỊbutton
+  div
+
+  script
+     Kết nối tới MQTT Broker qua cổng WebSocket bảo mật (8884)
+    const client = mqtt.connect('wssbroker.hivemq.com8884mqtt');
+
+    const topicControl = esp32myhomecontrol;
+    const topicStatus  = esp32myhomestatus;
+
+    client.on('connect', () = {
+      document.getElementById('monitoring-data').innerText = Đã kết nối MQTT Broker!;
+      client.subscribe(topicStatus);
+    });
+
+    client.on('message', (topic, message) = {
+      if (topic === topicStatus) {
+        document.getElementById('monitoring-data').innerText = message.toString();
+      }
+    });
+
+    function sendControl(cmd) {
+      client.publish(topicControl, cmd);
+    }
+  script
+body
+html
