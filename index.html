@@ -2,163 +2,143 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Điều Khiển Giám Sát Hệ Thống Điện Gia Đình</title>
-    <!-- Thư viện MQTT.js -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <title>Giám sát Điện năng & Tính tiền điện Bậc thang</title>
+    <!-- Sử dụng thư viện Paho MQTT cho trình duyệt -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #ffffff;
-            color: #000000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-
-        h2 {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 25px;
-            text-align: center;
-            text-transform: uppercase;
-        }
-
-        /* Bảng thông số 2 hàng x 4 cột */
-        .monitor-table {
-            border-collapse: collapse;
-            width: 100%;
-            max-width: 900px;
-            border: 2px solid #000000;
-            margin-bottom: 40px;
-        }
-
-        .monitor-table td {
-            border: 1px solid #000000;
-            padding: 8px 12px;
-            font-size: 14px;
-            width: 25%;
-            vertical-align: top;
-            background-color: #ffffff;
-        }
-
-        .val {
-            font-weight: bold;
-            color: #0056b3;
-            margin-left: 5px;
-        }
-
-        /* Hàng 4 nút bấm điều khiển */
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            width: 100%;
-            max-width: 900px;
-        }
-
-        .btn {
-            flex: 1;
-            background-color: #ffffff;
-            color: #000000;
-            border: 2px solid #000000;
-            padding: 10px 0;
-            font-size: 15px;
-            font-weight: normal;
-            cursor: pointer;
-            box-shadow: 2px 2px 0px #000000;
-            transition: all 0.1s ease;
-        }
-
-        .btn:active {
-            box-shadow: 0px 0px 0px #000000;
-            transform: translate(2px, 2px);
-        }
-
-        .btn.active {
-            background-color: #e0e0e0;
-            font-weight: bold;
-        }
-
-        /* Trạng thái kết nối */
-        #status-info {
-            margin-top: 15px;
-            font-size: 12px;
-            color: #666666;
-        }
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2, h3 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .card { background: #e9ecef; padding: 15px; border-radius: 6px; text-align: center; }
+        .card h4 { margin: 0 0 10px 0; color: #555; }
+        .card span { font-size: 20px; font-weight: bold; color: #007bff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #007bff; color: white; }
+        input[type="number"] { width: 90px; padding: 5px; text-align: center; }
+        .btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 15px; }
+        .btn:hover { background: #218838; }
+        #status { font-weight: bold; color: orange; }
     </style>
 </head>
 <body>
 
-    <h2>ĐIỀU KHIỂN GIÁM SÁT HỆ THỐNG ĐIỆN GIA ĐÌNH</h2>
+<div class="container">
+    <h2>Giám sát Năng lượng ESP32 - MX300</h2>
+    <p>Trạng thái kết nối MQTT: <span id="status">Đang kết nối...</span></p>
 
-    <!-- Bảng hiển thị thông số điện năng -->
-    <table class="monitor-table">
+    <!-- Các thông số đo từ thiết bị -->
+    <div class="grid">
+        <div class="card"><h4>Điện áp</h4><span id="v">--</span> V</div>
+        <div class="card"><h4>Dòng điện</h4><span id="i">--</span> A</div>
+        <div class="card"><h4>Công suất tác dụng</h4><span id="p">--</span> kW</div>
+        <div class="card"><h4>Hệ số công suất (PF)</h4><span id="pf">--</span></div>
+        <div class="card"><h4>Tần số</h4><span id="f">--</span> Hz</div>
+        <div class="card"><h4>Tổng tiền điện</h4><span id="bill" style="color: red;">--</span> VNĐ</div>
+    </div>
+
+    <h3>Cài đặt Biểu giá điện Bậc thang & Số kWh</h3>
+    <p>Bạn có thể thay đổi trực tiếp đơn giá các bậc bên dưới và bấm nút cập nhật để gửi xuống thiết bị:</p>
+    
+    <label><b>Số kWh tiêu thụ trong tháng:</b> </label>
+    <input type="number" id="inputKWh" value="120" style="width: 120px; font-weight: bold;" step="0.1"><br><br>
+
+    <table>
         <tr>
-            <td>Voltage: <span id="val-voltage" class="val">-- V</span></td>
-            <td>Current: <span id="val-current" class="val">-- A</span></td>
-            <td>Power Factor: <span id="val-pf" class="val">--</span></td>
-            <td>Active Power: <span id="val-apower" class="val">-- W</span></td>
+            <th>Bậc thang</th>
+            <th>Mức tiêu thụ (kWh)</th>
+            <th>Đơn giá (VNĐ/kWh)</th>
         </tr>
         <tr>
-            <td>Reactive Power: <span id="val-rpower" class="val">-- var</span></td>
-            <td>Apparent Power: <span id="val-spower" class="val">-- VA</span></td>
-            <td>Frequency: <span id="val-freq" class="val">-- Hz</span></td>
-            <td>Temperature: <span id="val-temp" class="val">-- °C</span></td>
+            <td>Bậc 1</td>
+            <td>0 – 50 kWh</td>
+            <td><input type="number" id="p1" value="1984"></td>
+        </tr>
+        <tr>
+            <td>Bậc 2</td>
+            <td>51 – 100 kWh</td>
+            <td><input type="number" id="p2" value="2050"></td>
+        </tr>
+        <tr>
+            <td>Bậc 3</td>
+            <td>101 – 200 kWh</td>
+            <td><input type="number" id="p3" value="2380"></td>
+        </tr>
+        <tr>
+            <td>Bậc 4</td>
+            <td>201 – 300 kWh</td>
+            <td><input type="number" id="p4" value="2998"></td>
+        </tr>
+        <tr>
+            <td>Bậc 5</td>
+            <td>301 – 400 kWh</td>
+            <td><input type="number" id="p5" value="3350"></td>
+        </tr>
+        <tr>
+            <td>Bậc 6</td>
+            <td>401 kWh trở lên</td>
+            <td><input type="number" id="p6" value="3460"></td>
         </tr>
     </table>
 
-    <!-- Hàng nút nhấn điều khiển -->
-    <div class="button-group">
-        <button class="btn" onclick="sendControl('BTN1')">Nút ấn 1</button>
-        <button class="btn" onclick="sendControl('BTN2')">Nút ấn 2</button>
-        <button class="btn" onclick="sendControl('BTN3')">Nút ấn 3</button>
-        <button class="btn" onclick="sendControl('BTN4')">Nút ấn 4</button>
-    </div>
+    <button class="btn" onclick="sendConfigToESP32()">Cập nhật Đơn giá & Tính tiền</button>
+</div>
 
-    <div id="status-info">Trạng thái kết nối: Đang kết nối MQTT Server...</div>
+<script>
+    // Cấu hình kết nối MQTT qua WebSocket (HiveMQ public broker hỗ trợ ws qua cổng 8000)
+    const client = new Paho.MQTT.Client("broker.hivemq.com", 8000, "WebClient_" + parseInt(Math.random()*100000));
 
-    <script>
-        // Cấu hình MQTT Broker
-        const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+    client.onConnectionLost = function (responseObject) {
+        document.getElementById("status").style.color = "red";
+        document.getElementById("status").innerHTML = "Mất kết nối: " + responseObject.errorMessage;
+    };
 
-        const topicControl = "esp32/myhome/control";
-        const topicStatus  = "esp32/myhome/status";
-
-        client.on('connect', () => {
-            document.getElementById('status-info').innerText = "Trạng thái kết nối: Đã kết nối MQTT Broker!";
-            client.subscribe(topicStatus);
-        });
-
-        client.on('message', (topic, message) => {
-            if (topic === topicStatus) {
-                try {
-                    // Xử lý dữ liệu định dạng JSON gửi từ ESP32
-                    const data = JSON.parse(message.toString());
-                    if (data.voltage !== undefined) document.getElementById('val-voltage').innerText = data.voltage + " V";
-                    if (data.current !== undefined) document.getElementById('val-current').innerText = data.current + " A";
-                    if (data.pf !== undefined) document.getElementById('val-pf').innerText = data.pf;
-                    if (data.apower !== undefined) document.getElementById('val-apower').innerText = data.apower + " W";
-                    if (data.rpower !== undefined) document.getElementById('val-rpower').innerText = data.rpower + " var";
-                    if (data.spower !== undefined) document.getElementById('val-spower').innerText = data.spower + " VA";
-                    if (data.freq !== undefined) document.getElementById('val-freq').innerText = data.freq + " Hz";
-                    if (data.temp !== undefined) document.getElementById('val-temp').innerText = data.temp + " °C";
-                } catch (e) {
-                    // Nếu dữ liệu gửi về dạng văn bản thô
-                    console.log("Dữ liệu thô từ ESP32:", message.toString());
-                }
+    client.onMessageArrived = function (message) {
+        try {
+            let data = JSON.parse(message.payloadString);
+            document.getElementById("v").innerText = data.voltage ? data.voltage.toFixed(2) : "--";
+            document.getElementById("i").innerText = data.current ? data.current.toFixed(4) : "--";
+            document.getElementById("p").innerText = data.apower ? data.apower.toFixed(4) : "--";
+            document.getElementById("pf").innerText = data.pf ? data.pf.toFixed(2) : "--";
+            document.getElementById("f").innerText = data.freq ? data.freq.toFixed(2) : "--";
+            
+            if(data.total_bill !== undefined) {
+                document.getElementById("bill").innerText = data.total_bill.toLocaleString('vi-VN');
             }
-        });
+            if(data.kwh !== undefined) {
+                document.getElementById("inputKWh").value = data.kwh;
+            }
+        } catch (e) { console.log("Lỗi parse JSON:", e); }
+    };
 
-        // Hàm gửi lệnh điều khiển khi bấm nút
-        function sendControl(cmd) {
-            client.publish(topicControl, cmd);
-            console.log("Đã gửi lệnh:", cmd);
-        }
-    </script>
+    client.connect({
+        onSuccess: function () {
+            document.getElementById("status").style.color = "green";
+            document.getElementById("status").innerHTML = "Đã kết nối thành công!";
+            client.subscribe("esp32/myhome/status");
+        },
+        useSSL: false
+    });
+
+    // Hàm gửi cấu hình đơn giá và kWh từ Web xuống ESP32 qua MQTT
+    function sendConfigToESP32() {
+        let configData = {
+            kwh: parseFloat(document.getElementById("inputKWh").value),
+            p1: parseFloat(document.getElementById("p1").value),
+            p2: parseFloat(document.getElementById("p2").value),
+            p3: parseFloat(document.getElementById("p3").value),
+            p4: parseFloat(document.getElementById("p4").value),
+            p5: parseFloat(document.getElementById("p5").value),
+            p6: parseFloat(document.getElementById("p6").value)
+        };
+
+        let message = new Paho.MQTT.Message(JSON.stringify(configData));
+        message.destinationName = "esp32/myhome/control";
+        client.send(message);
+        alert("Đã gửi cập nhật đơn giá bậc thang xuống ESP32 thành công!");
+    }
+</script>
+
 </body>
 </html>
