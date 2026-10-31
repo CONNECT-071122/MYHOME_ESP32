@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Giám sát Điện năng & Tính tiền điện Bậc thang</title>
-    <!-- Sử dụng thư viện Paho MQTT cho trình duyệt -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
@@ -28,7 +27,6 @@
     <h2>Giám sát Năng lượng ESP32 - MX300</h2>
     <p>Trạng thái kết nối MQTT: <span id="status">Đang kết nối...</span></p>
 
-    <!-- Các thông số đo từ thiết bị -->
     <div class="grid">
         <div class="card"><h4>Điện áp</h4><span id="v">--</span> V</div>
         <div class="card"><h4>Dòng điện</h4><span id="i">--</span> A</div>
@@ -39,8 +37,6 @@
     </div>
 
     <h3>Cài đặt Biểu giá điện Bậc thang & Số kWh</h3>
-    <p>Bạn có thể thay đổi trực tiếp đơn giá các bậc bên dưới và bấm nút cập nhật để gửi xuống thiết bị:</p>
-    
     <label><b>Số kWh tiêu thụ trong tháng:</b> </label>
     <input type="number" id="inputKWh" value="120" style="width: 120px; font-weight: bold;" step="0.1"><br><br>
 
@@ -50,44 +46,20 @@
             <th>Mức tiêu thụ (kWh)</th>
             <th>Đơn giá (VNĐ/kWh)</th>
         </tr>
-        <tr>
-            <td>Bậc 1</td>
-            <td>0 – 50 kWh</td>
-            <td><input type="number" id="p1" value="1984"></td>
-        </tr>
-        <tr>
-            <td>Bậc 2</td>
-            <td>51 – 100 kWh</td>
-            <td><input type="number" id="p2" value="2050"></td>
-        </tr>
-        <tr>
-            <td>Bậc 3</td>
-            <td>101 – 200 kWh</td>
-            <td><input type="number" id="p3" value="2380"></td>
-        </tr>
-        <tr>
-            <td>Bậc 4</td>
-            <td>201 – 300 kWh</td>
-            <td><input type="number" id="p4" value="2998"></td>
-        </tr>
-        <tr>
-            <td>Bậc 5</td>
-            <td>301 – 400 kWh</td>
-            <td><input type="number" id="p5" value="3350"></td>
-        </tr>
-        <tr>
-            <td>Bậc 6</td>
-            <td>401 kWh trở lên</td>
-            <td><input type="number" id="p6" value="3460"></td>
-        </tr>
+        <tr><td>Bậc 1</td><td>0 – 50 kWh</td><td><input type="number" id="p1" value="1984"></td></tr>
+        <tr><td>Bậc 2</td><td>51 – 100 kWh</td><td><input type="number" id="p2" value="2050"></td></tr>
+        <tr><td>Bậc 3</td><td>101 – 200 kWh</td><td><input type="number" id="p3" value="2380"></td></tr>
+        <tr><td>Bậc 4</td><td>201 – 300 kWh</td><td><input type="number" id="p4" value="2998"></td></tr>
+        <tr><td>Bậc 5</td><td>301 – 400 kWh</td><td><input type="number" id="p5" value="3350"></td></tr>
+        <tr><td>Bậc 6</td><td>401 kWh trở lên</td><td><input type="number" id="p6" value="3460"></td></tr>
     </table>
 
     <button class="btn" onclick="sendConfigToESP32()">Cập nhật Đơn giá & Tính tiền</button>
 </div>
 
 <script>
-    // Cấu hình kết nối MQTT qua WebSocket (HiveMQ public broker hỗ trợ ws qua cổng 8000)
-    const client = new Paho.MQTT.Client("broker.hivemq.com", 8000, "WebClient_" + parseInt(Math.random()*100000));
+    // Dùng cổng WSS (8884) để trình duyệt kết nối bảo mật ổn định với HiveMQ
+    const client = new Paho.MQTT.Client("broker.hivemq.com", 8884, "WebClient_" + parseInt(Math.random()*100000));
 
     client.onConnectionLost = function (responseObject) {
         document.getElementById("status").style.color = "red";
@@ -118,10 +90,9 @@
             document.getElementById("status").innerHTML = "Đã kết nối thành công!";
             client.subscribe("esp32/myhome/status");
         },
-        useSSL: false
+        useSSL: true
     });
 
-    // Hàm gửi cấu hình đơn giá và kWh từ Web xuống ESP32 qua MQTT
     function sendConfigToESP32() {
         let configData = {
             kwh: parseFloat(document.getElementById("inputKWh").value),
