@@ -27,19 +27,19 @@
     <h2>Giám sát Năng lượng ESP32 - MX300</h2>
     <p>Trạng thái kết nối MQTT: <span id="status">Đang kết nối...</span></p>
 
-    <!-- Thêm thẻ hiển thị Tổng kWh đã dùng -->
     <div class="grid">
         <div class="card"><h4>Điện áp</h4><span id="v">--</span> V</div>
         <div class="card"><h4>Dòng điện</h4><span id="i">--</span> A</div>
         <div class="card"><h4>Công suất tác dụng</h4><span id="p">--</span> kW</div>
         <div class="card"><h4>Hệ số công suất (PF)</h4><span id="pf">--</span></div>
         <div class="card"><h4>Tần số</h4><span id="f">--</span> Hz</div>
-        <div class="card"><h4>Tổng điện năng</h4><span id="total_kwh" style="color: #d9534f;">--</span> kWh</div>
+        <div class="card"><h4>Điện năng tháng</h4><span id="kwh_month" style="color: #0275d8;">--</span> kWh</div>
+        <div class="card" style="grid-column: span 3; background: #e2e3e5;"><h4>Tổng điện năng vĩnh viễn (Không reset)</h4><span id="kwh_lifetime" style="color: #333; font-size: 22px;">--</span> kWh</div>
         <div class="card" style="grid-column: span 3; background: #fff3cd;"><h4>Tổng tiền điện tháng</h4><span id="bill" style="color: red; font-size: 24px;">--</span> VNĐ</div>
     </div>
 
-    <h3>Cài đặt Biểu giá điện Bậc thang & Số kWh</h3>
-    <label><b>Số kWh tiêu thụ (hoặc hiệu chỉnh):</b> </label>
+    <h3>Cài đặt Biểu giá điện Bậc thang & Số kWh tháng</h3>
+    <label><b>Số kWh tiêu thụ tháng (hoặc hiệu chỉnh):</b> </label>
     <input type="number" id="inputKWh" value="0" style="width: 120px; font-weight: bold;" step="0.01"><br><br>
 
     <table>
@@ -76,9 +76,12 @@
             document.getElementById("pf").innerText = data.pf ? data.pf.toFixed(2) : "--";
             document.getElementById("f").innerText = data.freq ? data.freq.toFixed(2) : "--";
             
-            if(data.kwh !== undefined) {
-                document.getElementById("total_kwh").innerText = data.kwh.toFixed(2);
-                document.getElementById("inputKWh").value = data.kwh.toFixed(2);
+            if(data.kwh_month !== undefined) {
+                document.getElementById("kwh_month").innerText = data.kwh_month.toFixed(2);
+                document.getElementById("inputKWh").value = data.kwh_month.toFixed(2);
+            }
+            if(data.kwh_lifetime !== undefined) {
+                document.getElementById("kwh_lifetime").innerText = data.kwh_lifetime.toFixed(2);
             }
             if(data.total_bill !== undefined) {
                 document.getElementById("bill").innerText = data.total_bill.toLocaleString('vi-VN');
