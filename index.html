@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Giám sát Điện năng & Tính tiền điện</title>
+    <title>Giám sát Điện năng & Tính tiền điện Bậc thang</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
@@ -58,8 +58,8 @@
 </div>
 
 <script>
-    // Kết nối qua cổng WebSocket 8083 của broker EMQX (Ổn định cho trình duyệt)
-    const client = new Paho.MQTT.Client("broker.emqx.io", 8083, "WebClient_" + parseInt(Math.random()*100000));
+    // Sử dụng cổng WSS 8884 của broker.hivemq.com để web kết nối bảo mật mượt mà
+    const client = new Paho.MQTT.Client("broker.hivemq.com", 8884, "WebClient_" + parseInt(Math.random()*100000));
 
     client.onConnectionLost = function (responseObject) {
         document.getElementById("status").style.color = "red";
@@ -90,7 +90,7 @@
             document.getElementById("status").innerHTML = "Đã kết nối thành công!";
             client.subscribe("esp32/myhome/status");
         },
-        useSSL: false
+        useSSL: true
     });
 
     function sendConfigToESP32() {
@@ -107,7 +107,7 @@
         let message = new Paho.MQTT.Message(JSON.stringify(configData));
         message.destinationName = "esp32/myhome/control";
         client.send(message);
-        alert("Đã gửi cập nhật đơn giá xuống ESP32 thành công!");
+        alert("Đã gửi cập nhật đơn giá xuống ESP32 thành công qua MQTT!");
     }
 </script>
 
