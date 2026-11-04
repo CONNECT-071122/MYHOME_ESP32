@@ -83,14 +83,16 @@
     client.onMessageArrived = function (message) {
         try {
             let data = JSON.parse(message.payloadString);
-            document.getElementById("v").innerText = data.voltage ? data.voltage.toFixed(2) : "--";
-            document.getElementById("i").innerText = data.current ? data.current.toFixed(4) : "--";
-            document.getElementById("p").innerText = data.apower ? data.apower.toFixed(4) : "--";
-            document.getElementById("rpower").innerText = data.rpower !== undefined ? data.rpower.toFixed(4) : "--";
-            document.getElementById("spower").innerText = data.spower !== undefined ? data.spower.toFixed(4) : "--";
-            document.getElementById("rssi").innerText = data.rssi !== undefined ? data.rssi : "--";
-            document.getElementById("pf").innerText = data.pf ? data.pf.toFixed(2) : "--";
-            document.getElementById("f").innerText = data.freq ? data.freq.toFixed(2) : "--";
+            
+            // Đã sửa lại điều kiện kiểm tra !== undefined để hiển thị chính xác cả khi giá trị bằng 0
+            document.getElementById("v").innerText = (data.voltage !== undefined) ? data.voltage.toFixed(2) : "--";
+            document.getElementById("i").innerText = (data.current !== undefined) ? data.current.toFixed(4) : "--";
+            document.getElementById("p").innerText = (data.apower !== undefined) ? data.apower.toFixed(4) : "--";
+            document.getElementById("rpower").innerText = (data.rpower !== undefined) ? data.rpower.toFixed(4) : "--";
+            document.getElementById("spower").innerText = (data.spower !== undefined) ? data.spower.toFixed(4) : "--";
+            document.getElementById("rssi").innerText = (data.rssi !== undefined) ? data.rssi : "--";
+            document.getElementById("pf").innerText = (data.pf !== undefined) ? data.pf.toFixed(2) : "--";
+            document.getElementById("f").innerText = (data.freq !== undefined) ? data.freq.toFixed(2) : "--";
             
             if(data.kwh_month !== undefined) {
                 document.getElementById("kwh_month").innerText = data.kwh_month.toFixed(2);
