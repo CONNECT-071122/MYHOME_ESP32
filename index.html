@@ -12,6 +12,10 @@
         .card { background: #e9ecef; padding: 15px; border-radius: 6px; text-align: center; }
         .card h4 { margin: 0 0 10px 0; color: #555; }
         .card span { font-size: 20px; font-weight: bold; color: #007bff; }
+        .firmware-card { background: #f8f9fa; border: 1px solid #ced4da; padding: 15px; border-radius: 6px; margin-bottom: 20px; word-break: break-all; }
+        .firmware-card h4 { margin: 0 0 8px 0; color: #495057; }
+        .firmware-card a { color: #007bff; text-decoration: none; font-weight: bold; }
+        .firmware-card a:hover { text-decoration: underline; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background-color: #007bff; color: white; }
@@ -36,6 +40,12 @@
         <div class="card"><h4>Điện năng tháng</h4><span id="kwh_month" style="color: #0275d8;">--</span> kWh</div>
         <div class="card" style="grid-column: span 3; background: #e2e3e5;"><h4>Tổng điện năng tiêu thụ</h4><span id="kwh_lifetime" style="color: #333; font-size: 22px;">--</span> kWh</div>
         <div class="card" style="grid-column: span 3; background: #fff3cd;"><h4>Tổng tiền điện tháng</h4><span id="bill" style="color: red; font-size: 24px;">--</span> VNĐ</div>
+    </div>
+
+    <!-- Khung hiển thị đường dẫn Firmware OTA -->
+    <div class="firmware-card">
+        <h4>Đường dẫn Firmware OTA hiện tại (Firmware URL):</h4>
+        <a id="firmware_url_link" href="#" target="_blank">Đang cập nhật từ thiết bị...</a>
     </div>
 
     <h3>Cài đặt Biểu giá điện Bậc thang & Số kWh tháng</h3>
@@ -85,6 +95,12 @@
             }
             if(data.total_bill !== undefined) {
                 document.getElementById("bill").innerText = data.total_bill.toLocaleString('vi-VN');
+            }
+            // Cập nhật đường dẫn firmware lên giao diện web
+            if(data.firmware_url !== undefined) {
+                let fwLink = document.getElementById("firmware_url_link");
+                fwLink.innerText = data.firmware_url;
+                fwLink.href = data.firmware_url;
             }
         } catch (e) { console.log("Lỗi parse JSON:", e); }
     };
