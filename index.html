@@ -84,33 +84,33 @@
         try {
             let data = JSON.parse(message.payloadString);
             
-            // Đã sửa lại điều kiện kiểm tra !== undefined để hiển thị chính xác cả khi giá trị bằng 0
-            document.getElementById("v").innerText = (data.voltage !== undefined) ? data.voltage.toFixed(2) : "--";
-            document.getElementById("i").innerText = (data.current !== undefined) ? data.current.toFixed(4) : "--";
-            document.getElementById("p").innerText = (data.apower !== undefined) ? data.apower.toFixed(4) : "--";
-            document.getElementById("rpower").innerText = (data.rpower !== undefined) ? data.rpower.toFixed(4) : "--";
-            document.getElementById("spower").innerText = (data.spower !== undefined) ? data.spower.toFixed(4) : "--";
+            document.getElementById("v").innerText = (data.voltage !== undefined && !isNaN(data.voltage)) ? Number(data.voltage).toFixed(2) : "--";
+            document.getElementById("i").innerText = (data.current !== undefined && !isNaN(data.current)) ? Number(data.current).toFixed(4) : "--";
+            document.getElementById("p").innerText = (data.apower !== undefined && !isNaN(data.apower)) ? Number(data.apower).toFixed(4) : "--";
+            document.getElementById("rpower").innerText = (data.rpower !== undefined && !isNaN(data.rpower)) ? Number(data.rpower).toFixed(4) : "--";
+            document.getElementById("spower").innerText = (data.spower !== undefined && !isNaN(data.spower)) ? Number(data.spower).toFixed(4) : "--";
             document.getElementById("rssi").innerText = (data.rssi !== undefined) ? data.rssi : "--";
-            document.getElementById("pf").innerText = (data.pf !== undefined) ? data.pf.toFixed(2) : "--";
-            document.getElementById("f").innerText = (data.freq !== undefined) ? data.freq.toFixed(2) : "--";
+            document.getElementById("pf").innerText = (data.pf !== undefined && !isNaN(data.pf)) ? Number(data.pf).toFixed(2) : "--";
+            document.getElementById("f").innerText = (data.freq !== undefined && !isNaN(data.freq)) ? Number(data.freq).toFixed(2) : "--";
             
-            if(data.kwh_month !== undefined) {
-                document.getElementById("kwh_month").innerText = data.kwh_month.toFixed(2);
-                document.getElementById("inputKWh").value = data.kwh_month.toFixed(2);
+            if(data.kwh_month !== undefined && !isNaN(data.kwh_month)) {
+                document.getElementById("kwh_month").innerText = Number(data.kwh_month).toFixed(2);
+                document.getElementById("inputKWh").value = Number(data.kwh_month).toFixed(2);
             }
-            if(data.kwh_lifetime !== undefined) {
-                document.getElementById("kwh_lifetime").innerText = data.kwh_lifetime.toFixed(2);
+            if(data.kwh_lifetime !== undefined && !isNaN(data.kwh_lifetime)) {
+                document.getElementById("kwh_lifetime").innerText = Number(data.kwh_lifetime).toFixed(2);
             }
-            if(data.total_bill !== undefined) {
-                document.getElementById("bill").innerText = data.total_bill.toLocaleString('vi-VN');
+            if(data.total_bill !== undefined && !isNaN(data.total_bill)) {
+                document.getElementById("bill").innerText = Number(data.total_bill).toLocaleString('vi-VN');
             }
-            // Cập nhật đường dẫn firmware lên giao diện web
             if(data.firmware_url !== undefined) {
                 let fwLink = document.getElementById("firmware_url_link");
                 fwLink.innerText = data.firmware_url;
                 fwLink.href = data.firmware_url;
             }
-        } catch (e) { console.log("Lỗi parse JSON:", e); }
+        } catch (e) { 
+            console.log("Lỗi parse JSON:", e); 
+        }
     };
 
     client.connect({
