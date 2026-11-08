@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Giám sát Điện năng & Tính tiền điện Bậc thang</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2, h3 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .card { background: #e9ecef; padding: 15px; border-radius: 6px; text-align: center; }
+        .card h4 { margin: 0 0 10px 0; color: #555; }
+        .card span { font-size: 20px; font-weight: bold; color: #007bff; }
+        .firmware-card { background: #f8f9fa; border: 1px solid #ced4da; padding: 15px; border-radius: 6px; margin-bottom: 20px; word-break: break-all; }
+        .firmware-card h4 { margin: 0 0 8px 0; color: #495057; }
+        .firmware-card a { color: #007bff; text-decoration: none; font-weight: bold; }
+        .firmware-card a:hover { text-decoration: underline; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #007bff; color: white; }
+        input[type="number"] { width: 90px; padding: 5px; text-align: center; }
+        .btn { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 15px; }
+        .btn:hover { background: #218838; }
+        #status { font-weight: bold; color: orange; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Giám sát Năng lượng ESP32 - MX300</h2>
+    <p>Trạng thái kết nối MQTT: <span id="status">Đang kết nối...</span></p>
+
+    <div class="grid">
+        <div class="card"><h4>Điện áp</h4><span id="v">--</span> V</div>
+        <div class="card"><h4>Dòng điện</h4><span id="i">--</span> A</div>
+        <div class="card"><h4>Công suất tác dụng</h4><span id="p">--</span> kW</div>
+        <div class="card"><h4>Công suất phản kháng</h4><span id="rpower">--</span> kVAR</div>
+        <div class="card"><h4>Công suất biểu kiến</h4><span id="spower">--</span> kVA</div>
+        <div class="card"><h4>Sóng WiFi (RSSI)</h4><span id="rssi">--</span> dBm</div>
+        <div class="card"><h4>Hệ số công suất (PF)</h4><span id="pf">--</span></div>
+        <div class="card"><h4>Tần số</h4><span id="f">--</span> Hz</div>
+        <div class="card"><h4>Điện năng tiêu thụ trong tháng</h4><span id="kwh_month" style="color: #0275d8;">--</span> kWh</div>
+        <div class="card" style="grid-column: span 3; background: #e2e3e5;"><h4>Tổng điện năng đã tiêu thụ</h4><span id="kwh_lifetime" style="color: #333; font-size: 22px;">--</span> kWh</div>
+        <div class="card" style="grid-column: span 3; background: #fff3cd;"><h4>Tổng tiền điện trong tháng</h4><span id="bill" style="color: red; font-size: 24px;">--</span> VNĐ</div>
+    </div>
+
+    <!-- Khung hiển thị đường dẫn Firmware OTA -->
+    <div class="firmware-card">
+        <h4>Đường dẫn Firmware OTA hiện tại (Firmware URL):</h4>
+        <a id="firmware_url_link" href="#" target="_blank">Đang cập nhật từ thiết bị...</a>
+    </div>
+
+    <h3>Cài đặt Biểu giá điện Bậc thang & Số kWh tháng</h3>
+    <label><b>Số kWh tiêu thụ tháng (hoặc hiệu chỉnh):</b> </label>
+    <input type="number" id="inputKWh" value="0" style="width: 120px; font-weight: bold;" step="0.01"><br><br>
+
+    <table>
+        <tr>
+            <th>Bậc thang</th>
+            <th>Mức tiêu thụ (kWh)</th>
+            <th>Đơn giá (VNĐ/kWh)</th>
+        </tr>
+        <tr><td>Bậc 1</td><td>0 – 50 kWh</td><td><input type="number" id="p1" value="1984"></td></tr>
+        <tr><td>Bậc 2</td><td>51 – 100 kWh</td><td><input type="number" id="p2" value="2050"></td></tr>
+        <tr><td>Bậc 3</td><td>101 – 200 kWh</td><td><input type="number" id="p3" value="2380"></td></tr>
+        <tr><td>Bậc 4</td><td>201 – 300 kWh</td><td><input type="number" id="p4" value="2998"></td></tr>
+        <tr><td>Bậc 5</td><td>301 – 400 kWh</td><td><input type="number" id="p5" value="3350"></td></tr>
+        <tr><td>Bậc 6</td><td>401 kWh trở lên</td><td><input type="number" id="p6" value="3460"></td></tr>
+    </table>
+
+    <button class="btn" onclick="sendConfigToESP32()">Cập nhật Đơn giá & Cài đặt kWh</button>
+</div>
+
+<script>
+    const client = new Paho.MQTT.Client("broker.hivemq.com", 8884, "WebClient_" + parseInt(Math.random()*100000));
+
+    client.onConnectionLost = function (responseObject) {
+        document.getElementById("status").style.color = "red";
+        document.getElementById("status").innerHTML = "Mất kết nối: " + responseObject.errorMessage;
+    };
+
+    client.onMessageArrived = function (message) {
+        try {
+            let data = JSON.parse(message.payloadString);
+            document.getElementById("v").innerText = data.voltage ? data.voltage.toFixed(2) : "--";
+            document.getElementById("i").innerText = data.current ? data.current.toFixed(4) : "--";
+            document.getElementById("p").innerText = data.apower ? data.apower.toFixed(4) : "--";
+            document.getElementById("rpower").innerText = data.rpower !== undefined ? data.rpower.toFixed(4) : "--";
+            document.getElementById("spower").innerText = data.spower !== undefined ? data.spower.toFixed(4) : "--";
+            document.getElementById("rssi").innerText = data.rssi !== undefined ? data.rssi : "--";
+            document.getElementById("pf").innerText = data.pf ? data.pf.toFixed(2) : "--";
+            document.getElementById("f").innerText = data.freq ? data.freq.toFixed(2) : "--";
+            
+            if(data.kwh_month !== undefined) {
+                document.getElementById("kwh_month").innerText = data.kwh_month.toFixed(2);
+                document.getElementById("inputKWh").value = data.kwh_month.toFixed(2);
+            }
+            if(data.kwh_lifetime !== undefined) {
+                document.getElementById("kwh_lifetime").innerText = data.kwh_lifetime.toFixed(2);
+            }
+            if(data.total_bill !== undefined) {
+                document.getElementById("bill").innerText = data.total_bill.toLocaleString('vi-VN');
+            }
+            // Cập nhật đường dẫn firmware lên giao diện web
+            if(data.firmware_url !== undefined) {
+                let fwLink = document.getElementById("firmware_url_link");
+                fwLink.innerText = data.firmware_url;
+                fwLink.href = data.firmware_url;
+            }
+        } catch (e) { console.log("Lỗi parse JSON:", e); }
+    };
+
+    client.connect({
+        onSuccess: function () {
+            document.getElementById("status").style.color = "green";
+            document.getElementById("status").innerHTML = "Đã kết nối thành công!";
+            client.subscribe("esp32/myhome/status");
+        },
+        useSSL: true
+    });
+
+    function sendConfigToESP32() {
+        let configData = {
+            kwh: parseFloat(document.getElementById("inputKWh").value),
+            p1: parseFloat(document.getElementById("p1").value),
+            p2: parseFloat(document.getElementById("p2").value),
+            p3: parseFloat(document.getElementById("p3").value),
+            p4: parseFloat(document.getElementById("p4").value),
+            p5: parseFloat(document.getElementById("p5").value),
+            p6: parseFloat(document.getElementById("p6").value)
+        };
+
+        let message = new Paho.MQTT.Message(JSON.stringify(configData));
+        message.destinationName = "esp32/myhome/control";
+        client.send(message);
+        alert("Đã gửi cấu hình xuống thiết bị thành công!");
+    }
+</script>
+
+</body>
+</html>
