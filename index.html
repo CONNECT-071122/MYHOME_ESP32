@@ -206,7 +206,7 @@ button{
 <div class="status-box">
 
     <p>
-        Trạng thái kết nối MQTT:
+        Trạng thái kết nối giao diện:
         <span id="status"
               class="status-text"
               style="color:orange;">
@@ -215,7 +215,7 @@ button{
     </p>
 
     <p>
-        Trạng thái ESP32:
+        Trạng thái kết nối thiết bị:
         <span id="esp_status"
               class="status-text"
               style="color:orange;">
@@ -677,12 +677,10 @@ client.onMessageArrived = function(message){
        CÔNG SUẤT TÁC DỤNG
        ===================================================== */
 
-    if(data.apower !== undefined){
-
-        document.getElementById("p").innerText =
-            Number(data.apower).toFixed(2);
-
-    }
+if (data.apower !== undefined) {
+    document.getElementById("p").innerText =
+        (Number(data.apower) * 1000).toFixed(0);
+}
 
 
     /* =====================================================
