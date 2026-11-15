@@ -241,27 +241,6 @@
     </div>
 
     <!-- OTA -->
-    <div class="ota-card">
-
-        <h3>Cập nhật Firmware OTA</h3>
-
-        <p>
-            Nhấn nút bên dưới để ESP32 tự động tải Firmware mới
-            từ máy chủ và cập nhật.
-        </p>
-
-        <button
-            id="otaButton"
-            class="ota-btn"
-            onclick="startOTA()">
-            Cập nhật Firmware
-        </button>
-
-        <div id="ota_status">
-            Trạng thái OTA: Chưa thực hiện
-        </div>
-
-    </div>
 
     <!-- CÀI ĐẶT GIÁ ĐIỆN -->
     <h3>Cài đặt Biểu giá điện Bậc thang & Số kWh tháng</h3>
@@ -342,6 +321,27 @@
         onclick="sendConfigToESP32()">
         Cập nhật Đơn giá & Cài đặt kWh
     </button>
+     <div class="ota-card">
+
+        <h3>Cập nhật Firmware OTA</h3>
+
+        <p>
+            Nhấn nút bên dưới để ESP32 tự động tải Firmware mới
+            từ máy chủ và cập nhật.
+        </p>
+
+        <button
+            id="otaButton"
+            class="ota-btn"
+            onclick="startOTA()">
+            Cập nhật Firmware
+        </button>
+
+        <div id="ota_status">
+            Trạng thái OTA: Chưa thực hiện
+        </div>
+
+    </div>
 
 </div>
 
